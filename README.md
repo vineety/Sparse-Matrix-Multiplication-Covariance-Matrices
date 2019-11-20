@@ -1,1 +1,19 @@
 # Sparse-Matrix-Multiplication-Covariance-Matrices
+
+Primary Algorithm : Algorithmically, Sparse-Sparse multiplication problems manifests itself in three possible forms:(a) Multiplication of a sparse matrix with a sparse diagonal, sparse block-diagonal, or full-dense covariance matrix ,(b)Multiplication of a sparse matrix with a sparse matrix that result in a sparse symmetric matrix, and (c) Multiplication of a sparse matrix multiplication with a sparse that result in a dense symmetric matrix. The code as part of this repository performs these operations in computationally efficiencint manner.
+
+Problem Formulation:
+
+Matrix multiplication of two sparse matrices is a fundamental operation in linear Bayesian inverse problems for computing covariance matrices of observations and a posteriori uncertainties. Applications of sparse-sparse matrix multiplication algorithms for specific use-cases in such inverse problems remain unexplored. We present a hybrid-parallel sparse-sparse matrix multiplication approach that is more efficient by a third in terms of execution time and operation count relative to standard sparse matrix multiplication algorithms available in most libraries. Two modifications of this hybrid-parallel algorithm are also proposed for the types of operations typical of atmospheric inverse problems, which further reduce the cost of sparse matrix multiplication by yielding only upper triangular and/or dense matrices.
+
+Reference Paper:
+
+Technical Note: Improving the computational efficiency of sparse matrix multiplication in linear atmospheric inverse problems 
+
+Yadav, V. and Michalak, A. M.: Technical Note: Improving the computational efficiency of sparse matrix multiplication in linear atmospheric inverse problems, Geosci. Model Dev. Discuss., https://doi.org/10.5194/gmd-2016-204.
+
+Downloadable from: https://www.geosci-model-dev-discuss.net/gmd-2016-204/gmd-2016-204.pdf
+
+Code Description:
+
+Two MATLAB code files demonstrating the applicationof the methods proposed in this manuscript are in-cluded as supplementary material. The MATLAB script file“HQHQHt.m” allows users to experiment with differentsizes of random covariance matrices in a Kronecker productform and computesHQandHQHTusing the direct methodas well as the method presented in Sect. 2.1. The secondMATLAB script file “UncertaintyComputations.m” allowsusers to experiment with random matrices for computing aposteriori covariances aggregated either over all time periodsor for specified time periods. A detailed description of thecodes is also given at the beginning of the script files. Notethat these codes are provided to illustrate the two algorithmsproposed in this research, but these codes should not be usedto assess the computational performance of these algorithms.This is because MATLAB uses (1) highly optimized multi-threaded external libraries (Basic Algebra Subroutines) forperforming matrix multiplication, and (2) automatic memorymanagement (e.g., allocation and reallocation of memory).To supplement the MATLAB routines, we also includecompletely serial Fortran (filename: HQ.f90) and C++(file-name: HQ.cpp) code for performing the matrix multiplica-tion ofHandQmatrix. Although the performance of thesecodes may vary depending on computer architecture, the per-formance will approximately reflect the computational sav-ings described in the manuscript. For example, for the For-tran code compiled using the GFortran compiler on a IntelXeon X5660 2.80 GHz machine with 96 GB RAM, a ma-trix multiplication (1) withn=8503,r=t=10, andp=q=100 took approximately 12 s using the direct methodand approximately 2.2 s using the indirect method; (2) withn=8503,r=t=100, andp=q=10, the direct methodtook approximately 9.4 s whereas the indirect method tookapproximately 1.0 s; and (3) withn=15000,r=t=150andp=q=150, the direct method took approximately 3 hwhereas the indirect method took approximately 3.4 min.
