@@ -1,0 +1,186 @@
+#include <string.h>
+#include <math.h>
+#include <omp.h>
+#include "matrix_def.h"
+#include "functions.h"
+
+void sparsework_nosym(const struct sparsemat * const matrixa, const struct sparsemat * const matrixb, struct sparsemat * const matrixc, const int startIndex, const int endIndex,
+	int memIncrease)
+{
+	/*
+	This function computes C = A*B for specific rows. A and B are in CSR form.
+	C is returned in a CSR form. The function handles the case where non-zeros in A
+	and B > 0 and dimensions of A and B are > (1,1).
+
+	Inputs:
+	(1) matrixa in CSR sparse format
+	(2) matrixb in CSR format
+	(3) matrixc is a dynamically allocated CSR structure whose rowPtr pointers, colInd
+	and values are dynamically allocated by calloc function at runtime by this function
+	(4) startIndex = beginning index of rows for which to perform matrix multiplication of A*B;
+	(5) endIndex = end index of rows for which to perform matrix multiplication
+	(6) memIncrease = This is number of non zero entries for which memory would be
+	allocated at runtime
+	Note:
+	(1) Everytime extra memory is required it is increased by memIncrese numbers.
+
+	Output:
+	(1) On output matrixc is updated and will contain result from the matrix
+	multiplication of A*B for specific rows.
+	*/
+
+	/*loop counters and scratch variables*/
+	int i, j, k, col_num_a;
+	double value;
+	int temp = 0;
+	int *workArray = NULL;
+
+	matrixc->rows = endIndex - startIndex + 1; // size of smaller sub-matrix
+	matrixc->cols = matrixb->cols; // columns in smaller sub-matrix
+	matrixc->nzmax = 0;
+
+	// Memory would be allocated based on initial size specified by the user
+	matrixc->rowPtr = (int *)calloc(matrixc->rows, sizeof(int));
+	matrixc->colInd = (int *)calloc(memIncrease, sizeof(int));
+	matrixc->values = (double *)calloc(memIncrease, sizeof(double));
+
+	// Workarray for collecting results in a temporary array
+	workArray = (int*)calloc(matrixb->cols, sizeof(int));
+	memset(workArray, -1, matrixb->cols*sizeof(int));
+
+	/*Get column indices and entries of the output matrix for the rows
+	from startIndex to endIndex*/
+	for (i = startIndex; i <= endIndex; ++i)
+	{
+		for (j = matrixa->rowPtr[i]; j <matrixa->rowPtr[i + 1]; ++j)
+		{
+			value = matrixa->values[j];
+			col_num_a = matrixa->colInd[j];
+			for (k = matrixb->rowPtr[col_num_a]; k < matrixb->rowPtr[col_num_a + 1]; ++k)
+			{
+				/*This would give coloumn no of the entry in the B matrix*/
+				if (workArray[matrixb->colInd[k]] != -1)
+				{
+					matrixc->values[workArray[matrixb->colInd[k]]] += value * matrixb->values[k];
+				}
+				else
+				{
+					matrixc->colInd[matrixc->nzmax] = matrixb->colInd[k];
+					workArray[matrixb->colInd[k]] = matrixc->nzmax;
+					matrixc->values[matrixc->nzmax] = value*matrixb->values[k];
+					matrixc->nzmax += 1;
+				}
+			}
+		}
+		/*put results sequentially. Counter computes
+		how many entries in a row of the output matrix are non-zeros*/
+		for (k = temp; k<matrixc->nzmax; ++k)
+		{
+			workArray[matrixc->colInd[k]] = -1;
+		}
+		if (matrixc->nzmax + matrixb->cols >= memIncrease)
+		{
+			modifyalloc(matrixc, matrixc->nzmax + memIncrease);
+			memIncrease = matrixc->nzmax + memIncrease;
+		}
+		//This collect results for final calculation of row pointers
+		matrixc->rowPtr[i - startIndex] = matrixc->nzmax - temp;
+		temp = matrixc->nzmax;
+	}
+	free(workArray);
+	workArray = NULL;
+	// if memory is more than nzmax than reduce the size of memory
+	modifyalloc(matrixc, matrixc->nzmax);
+}
+
+void sparsework_sym(const struct sparsemat * const matrixa, const struct sparsemat * const matrixb, struct sparsemat * const matrixc, const int startIndex, const int endIndex,
+	int memIncrease)
+{
+	/*
+	This function computes C = A*B for specific rows. A and B are in CSR form.
+	C is returned in a CSR form. The function handles the case where non-zeros in A
+	and B > 0 and dimensions of A and B are > (1,1).
+
+	Inputs:
+	(1) matrixa in CSR sparse format
+	(2) matrixb in CSR format
+	(3) matrixc is a dynamically allocated CSR structure whose rowPtr pointers, colInd
+	and values are dynamically allocated by calloc function at runtime by this function
+	(4) startIndex = beginning index of rows for which to perform matrix multiplication of A*B;
+	(5) endIndex = end index of rows for which to perform matrix multiplication
+	(6) memIncrease = This is number of non zero entries for which memory would be
+	allocated at runtime
+	Note:
+	(1) Evrytime extra memory is required it is increased by memIncrese numbers.
+
+	Output:
+	(1) On output matrixc is updated and will contain result from the matrix
+	multiplication of A*B for specific rows.
+	*/
+
+	/*loop counters and scratch variables*/
+	int i, j, k, col_num_a, col_num_b;
+	double value;
+	int temp = 0;
+	int *workArray = NULL;
+
+	matrixc->rows = endIndex - startIndex + 1; // size of smaller sub-matrix
+	matrixc->cols = matrixb->cols; // columns in smaller sub-matrix
+	matrixc->nzmax = 0;
+	// Memory would be allocated based on initial size specified by the user
+	matrixc->rowPtr = (int *)calloc(matrixc->rows, sizeof(int));
+	matrixc->colInd = (int *)calloc(memIncrease, sizeof(int));
+	matrixc->values = (double *)calloc(memIncrease, sizeof(double));
+
+	// Workarray for collecting results in a temporary array
+	workArray = (int*)calloc(matrixb->cols, sizeof(int));
+	memset(workArray, -1, matrixb->cols*sizeof(int));
+
+	/*Get column indices and entries of the output matrix for the rows
+	from startIndex to endIndex*/
+	for (i = startIndex; i <= endIndex; ++i)
+	{
+		for (j = matrixa->rowPtr[i]; j <matrixa->rowPtr[i + 1]; ++j)
+		{
+			value = matrixa->values[j];
+			col_num_a = matrixa->colInd[j];
+			for (k = matrixb->rowPtr[col_num_a]; k < matrixb->rowPtr[col_num_a + 1]; ++k)
+			{
+				/*This would give coloumn no of the entry in the B matrix*/
+				col_num_b = matrixb->colInd[k];
+				if (i <= col_num_b)
+				{
+					if (workArray[col_num_b] != -1)
+					{
+						matrixc->values[workArray[col_num_b]] += value * matrixb->values[k];
+					}
+					else
+					{
+						matrixc->colInd[matrixc->nzmax] = col_num_b;
+						workArray[col_num_b] = matrixc->nzmax;
+						matrixc->values[matrixc->nzmax] = value*matrixb->values[k];
+						matrixc->nzmax += 1;
+					}
+				}
+			}
+		}
+		/*put results sequentially. Counter computes
+		how many entries in a row of the output matrix are non-zeros*/
+		for (k = temp; k<matrixc->nzmax; ++k)
+		{
+			workArray[matrixc->colInd[k]] = -1;
+		}
+		if (matrixc->nzmax + matrixb->cols >= memIncrease)
+		{
+			modifyalloc(matrixc, matrixc->nzmax + memIncrease);
+			memIncrease = matrixc->nzmax + memIncrease;
+		}
+		//This collect results for final calculation of row pointers
+		matrixc->rowPtr[i - startIndex] = matrixc->nzmax - temp;
+		temp = matrixc->nzmax;
+	}
+	free(workArray);
+	workArray = NULL;
+	// if memory is more than nzmax than reduce the size of memory
+	modifyalloc(matrixc, matrixc->nzmax);
+}
