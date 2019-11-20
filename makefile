@@ -1,10 +1,10 @@
-# Written by Vineet Yadav (JPL)
+# Written by Vineet Yadav
 # Date : July 26 2015 
 
 #choice for compiler
 Compiler=g++
 
-# Parent Source Directory (Specific to melvin2.jpl.nasa.gov: User Vineet Yadav)
+# Parent Source Directory (Change as per use case)
 sourcedir=/home/vineet/sparsecheck
 
 # Include path for header files specific to this sourcecode
