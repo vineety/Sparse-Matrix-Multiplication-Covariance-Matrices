@@ -24,7 +24,7 @@ srcfiles=$(sourcedir)/src/memfunctions.cpp \
         $(sourcedir)/src/filereading_main.cpp 
 # This filereading_main.cpp main function should be used if you want to read matrices from file
 # comment out main.cpp
-# $(sourcedir)/src/filereading_main.cpp \
+# $(sourcedir)/src/main.cpp \
         
         
 # Compiler flags
