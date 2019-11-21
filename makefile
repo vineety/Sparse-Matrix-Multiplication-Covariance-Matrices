@@ -11,7 +11,7 @@ sourcedir=/home/vineet/sparsecheck
 # classdefinitions.h functiondefinions.h
 IDIR=$(sourcedir)/include
 
-# Path for storing executable (Specific to melvin2.jpl.nasa.gov)
+# Path for storing executable (Specific to your directory)
 Execpath=$(sourcedir)
 
 # sourcecode
