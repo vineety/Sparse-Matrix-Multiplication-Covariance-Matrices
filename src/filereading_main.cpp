@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 #include "functions.h"
 #include "matrix_def.h"
 
