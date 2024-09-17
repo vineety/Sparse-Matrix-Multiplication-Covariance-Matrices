@@ -1,6 +1,8 @@
 #include <string.h>
 #include <math.h>
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 #include "matrix_def.h"
 #include "functions.h"
 
